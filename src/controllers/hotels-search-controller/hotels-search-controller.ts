@@ -1,5 +1,6 @@
 import {EventEmitter} from 'events';
 import {fetchThirdPartyExampleHotels} from '../../requests';
+import _ from 'lodash';
 
 const clientsDataMap = new Map();
 
@@ -26,8 +27,8 @@ export const getHotels = async (request, response) => {
             eventEmitter.emit('update', fastestResponse);
         });
 
-        Promise.all([firstRequest, secondRequest, thirdRequest]).then(data => {
-            eventEmitter.emit('update', data);
+        Promise.all([firstRequest, secondRequest, thirdRequest]).then(([firstResponse, secondResponse, thirdResponse]) => {
+            eventEmitter.emit('update', _.uniq([...firstResponse.body.accommodations, ...secondResponse.body.accommodations, ...thirdResponse.body.accommodations]));
         });
     } catch (error) {
         console.error(error);
