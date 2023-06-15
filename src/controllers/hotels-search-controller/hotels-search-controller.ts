@@ -24,11 +24,16 @@ export const getHotels = async (request, response) => {
         const thirdRequest = fetchThirdPartyExampleHotels(Number(skiSite), fromDate.toString(), toDate.toString(), Number(groupSize)+2);
 
         Promise.race([firstRequest, secondRequest, thirdRequest]).then(fastestResponse => {
-            eventEmitter.emit('update', fastestResponse);
+            eventEmitter.emit('update', fastestResponse.body.accommodations);
         });
 
         Promise.all([firstRequest, secondRequest, thirdRequest]).then(([firstResponse, secondResponse, thirdResponse]) => {
-            eventEmitter.emit('update', _.uniq([...firstResponse.body.accommodations, ...secondResponse.body.accommodations, ...thirdResponse.body.accommodations]));
+            const allData = _.uniq([
+                ...(firstResponse.body.accommodations ?? []),
+                ...(secondResponse.body.accommodations ?? []),
+                ...(thirdResponse.body.accommodations ?? [])
+            ]).sort((a, b) => a.PricesInfo.AmountBeforeTax - b.PricesInfo.AmountBeforeTax);
+            eventEmitter.emit('update', allData);
         });
     } catch (error) {
         console.error(error);
